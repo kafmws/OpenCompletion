@@ -1,0 +1,134 @@
+{
+  "name": "opencompletion",
+  "displayName": "OpenCompletion",
+  "description": "AI-powered code completion using Ollama or OpenAI-compatible APIs",
+  "version": "0.1.0",
+  "publisher": "opencompletion",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "OpenCompletion",
+      "properties": {
+        "opencompletion.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable OpenCompletion"
+        },
+        "opencompletion.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:11434/v1",
+          "description": "API base URL for OpenAI-compatible endpoint"
+        },
+        "opencompletion.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for authentication (leave empty for local Ollama)"
+        },
+        "opencompletion.modelName": {
+          "type": "string",
+          "default": "glm-4.7-flash:latest",
+          "description": "Model name to use for completion"
+        },
+        "opencompletion.context.scope": {
+          "type": "string",
+          "enum": [
+            "currentFile",
+            "project"
+          ],
+          "default": "currentFile",
+          "description": "Context scope for code completion"
+        },
+        "opencompletion.context.maxLines": {
+          "type": "number",
+          "default": 10,
+          "description": "Maximum number of lines to include as context"
+        },
+        "opencompletion.context.maxTokens": {
+          "type": "number",
+          "default": 2048,
+          "description": "Maximum tokens for completion response"
+        },
+        "opencompletion.debounceMs": {
+          "type": "number",
+          "default": 300,
+          "description": "Debounce delay in milliseconds before triggering completion"
+        },
+        "opencompletion.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "description": "Temperature for model sampling (0.0-1.0)"
+        },
+        "opencompletion.timeout": {
+          "type": "number",
+          "default": 10000,
+          "description": "Request timeout in milliseconds"
+        },
+        "opencompletion.autoContinue.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable auto-continue writing when user stops typing"
+        },
+        "opencompletion.autoContinue.delayMs": {
+          "type": "number",
+          "default": 2000,
+          "description": "Delay in milliseconds before triggering auto-continue"
+        },
+        "opencompletion.autoContinue.languages": {
+          "type": "array",
+          "default": ["markdown", "plaintext", "python", "c", "go"],
+          "description": "File types (language IDs) to enable auto-continue for"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "opencompletion.rewriteSelection",
+        "title": "OpenCompletion: Rewrite Selection"
+      },
+      {
+        "command": "opencompletion.continueWriting",
+        "title": "OpenCompletion: Continue Writing"
+      },
+      {
+        "command": "opencompletion.toggle",
+        "title": "OpenCompletion: Toggle Enable/Disable"
+      },
+      {
+        "command": "opencompletion.showStatus",
+        "title": "OpenCompletion: Show Status & Debug Info"
+      },
+      {
+        "command": "opencompletion.openSettings",
+        "title": "OpenCompletion: Open Settings"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
+}
