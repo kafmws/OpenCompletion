@@ -64,17 +64,20 @@ export class AutoContinueManager {
       return;
     }
 
+    if (this.provider.isRequesting()) {
+      this.logger.debug('⏸️ Skipping auto-continue: completion already in progress');
+      return;
+    }
+
     try {
-      this.logger.info('Auto-continue triggered - requesting inline completion', {
+      this.logger.info('🚀 Auto-continue triggered - requesting inline completion', {
         language: editor.document.languageId,
         position: editor.selection.active
       });
 
-      this.provider.resetDebounce();
-
       await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
       
-      this.logger.info('Inline completion triggered');
+      this.logger.info('✅ Inline completion triggered');
     } catch (error) {
       this.logger.error('Failed to trigger inline completion', error);
     }

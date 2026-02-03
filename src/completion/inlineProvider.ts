@@ -236,4 +236,8 @@ export class InlineCompletionProvider implements vscode.InlineCompletionItemProv
     this.lastRequestTime = 0;
     this.logger.debug('🔄 Debounce timer reset');
   }
+
+  public isRequesting(): boolean {
+    return this.currentRequest !== null;
+  }
 }

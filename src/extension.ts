@@ -55,6 +55,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       try {
+        inlineProvider.resetDebounce();
         await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
       } catch (error) {
         const logger = Logger.getInstance();
