@@ -37,7 +37,7 @@
         },
         "opencompletion.modelName": {
           "type": "string",
-          "default": "glm-4.7-flash:latest",
+          "default": "qwen2.5-coder:7b",
           "description": "Model name to use for completion"
         },
         "opencompletion.context.scope": {
@@ -56,7 +56,7 @@
         },
         "opencompletion.context.maxTokens": {
           "type": "number",
-          "default": 2048,
+          "default": 256,
           "description": "Maximum tokens for completion response"
         },
         "opencompletion.debounceMs": {
@@ -71,17 +71,17 @@
         },
         "opencompletion.timeout": {
           "type": "number",
-          "default": 10000,
+          "default": 20000,
           "description": "Request timeout in milliseconds"
         },
         "opencompletion.autoContinue.enabled": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Enable auto-continue writing when user stops typing"
         },
         "opencompletion.autoContinue.delayMs": {
           "type": "number",
-          "default": 2000,
+          "default": 500,
           "description": "Delay in milliseconds before triggering auto-continue"
         },
         "opencompletion.autoContinue.languages": {

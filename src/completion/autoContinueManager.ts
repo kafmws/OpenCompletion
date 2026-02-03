@@ -1,12 +1,18 @@
 import * as vscode from 'vscode';
 import { SettingsManager } from '../config/settings';
 import { Logger } from '../utils/logger';
+import { InlineCompletionProvider } from './inlineProvider';
 
 export class AutoContinueManager {
   private settings = SettingsManager.getInstance();
   private logger = Logger.getInstance();
   private typingTimer: NodeJS.Timeout | undefined;
   private lastChangeTime = 0;
+  private provider: InlineCompletionProvider;
+
+  constructor(provider: InlineCompletionProvider) {
+    this.provider = provider;
+  }
 
   public setupListeners(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
@@ -63,6 +69,8 @@ export class AutoContinueManager {
         language: editor.document.languageId,
         position: editor.selection.active
       });
+
+      this.provider.resetDebounce();
 
       await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
       

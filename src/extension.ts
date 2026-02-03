@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext): void {
     )
   );
 
-  autoContinueManager = new AutoContinueManager();
+  autoContinueManager = new AutoContinueManager(inlineProvider);
   autoContinueManager.setupListeners(context);
 
   const docCommands = new DocumentCommands();
@@ -147,13 +147,13 @@ async function showModelSwitcher(): Promise<void> {
     {
       label: '$(rocket) qwen2.5-coder',
       description: 'Qwen 2.5 Coder - Latest Alibaba model',
-      value: 'qwen2.5-coder',
+      value: 'qwen2.5-coder:7b',
       action: 'model'
     },
     {
       label: '$(rocket) glm-4.7-flash',
       description: 'Zhipu model',
-      value: 'glm-4.7-flash:latest',
+      value: 'glm-4.7-flash',
       action: 'model'
     },
     {

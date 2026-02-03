@@ -97,12 +97,23 @@ export class InlineCompletionProvider implements vscode.InlineCompletionItemProv
         preview: trimmedCompletion.substring(0, 50).replace(/\n/g, '\\n')
       });
 
+      const dedupedCompletion = this.removeDuplicatePrefix(document, position, trimmedCompletion);
+      
+      if (!dedupedCompletion) {
+        this.logger.warn('⚠️ Completion became empty after deduplication');
+        return null;
+      }
+
+      this.logger.info('🎯 Returning InlineCompletionItem', {
+        originalLength: trimmedCompletion.length,
+        dedupedLength: dedupedCompletion.length,
+        removed: trimmedCompletion.length - dedupedCompletion.length
+      });
+
       const item = new vscode.InlineCompletionItem(
-        trimmedCompletion,
+        dedupedCompletion,
         new vscode.Range(position, position)
       );
-
-      this.logger.info('🎯 Returning InlineCompletionItem');
 
       return [item];
     } catch (error) {
@@ -206,5 +217,23 @@ export class InlineCompletionProvider implements vscode.InlineCompletionItemProv
     }
 
     return trimmed;
+  }
+
+  private removeDuplicatePrefix(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    completion: string
+  ): string {
+    const currentLine = document.lineAt(position.line);
+    if (completion.startsWith(currentLine.text)) {
+      completion = completion.substring(currentLine.text.length)
+    }
+
+    return completion;
+  }
+
+  public resetDebounce(): void {
+    this.lastRequestTime = 0;
+    this.logger.debug('🔄 Debounce timer reset');
   }
 }
