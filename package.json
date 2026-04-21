@@ -1,16 +1,16 @@
 {
   "name": "opencompletion",
   "displayName": "OpenCompletion",
-  "description": "AI-powered code completion using Ollama or OpenAI-compatible APIs",
-  "version": "0.1.0",
-  "publisher": "opencompletion",
+  "description": "AI-powered inline code completion using Ollama or OpenAI-compatible APIs",
+  "version": "0.1.1",
+  "publisher": "kafm",
+  "repository": {"url": "https://github.com/kafmws/OpenCompletion.git"},
   "engines": {
     "vscode": "^1.75.0"
   },
   "categories": [
     "Programming Languages",
-    "Machine Learning",
-    "Other"
+    "AI"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -61,7 +61,7 @@
         },
         "opencompletion.debounceMs": {
           "type": "number",
-          "default": 300,
+          "default": 1000,
           "description": "Debounce delay in milliseconds before triggering completion"
         },
         "opencompletion.temperature": {
@@ -81,7 +81,7 @@
         },
         "opencompletion.autoContinue.delayMs": {
           "type": "number",
-          "default": 500,
+          "default": 2000,
           "description": "Delay in milliseconds before triggering auto-continue"
         },
         "opencompletion.autoContinue.languages": {

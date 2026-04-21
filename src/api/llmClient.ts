@@ -30,10 +30,16 @@ interface OpenAIRequest {
 
 interface OpenAIResponse {
   choices: Array<{
-    message: {
-      content: string;
+    message?: {
+      content?: string | Array<{
+        type?: string;
+        text?: string;
+      }> | null;
+      refusal?: string | null;
+      tool_calls?: unknown[];
     };
-    finish_reason: string;
+    text?: string | null;
+    finish_reason?: string | null;
   }>;
 }
 
@@ -48,26 +54,21 @@ export class LLMClient {
       return '';
     }
 
-    try {
-      const isCodeFile = this.isCodeLanguage(context.language);
-      const systemPrompt = isCodeFile
-        ? 'You are an expert code completion assistant. Complete the code naturally and concisely. Only return the completion, no explanations or markdown code blocks.'
-        : 'You are an expert writing assistant. Continue the text naturally and coherently. Only return the continuation, no explanations or formatting.';
-      
-      const userPrompt = isCodeFile
-        ? `Language: ${context.language}\nFile: ${context.filePath}\n\nCode before cursor:\n${context.prefixCode}\n\nCode after cursor:\n${context.suffixCode}\n\nComplete the code at the cursor position.`
-        : `File type: ${context.language}\nFile: ${context.filePath}\n\nText before cursor:\n${context.prefixCode}\n\nText after cursor:\n${context.suffixCode}\n\nContinue writing naturally from the cursor position.`;
+    const isCodeFile = this.isCodeLanguage(context.language);
+    const systemPrompt = isCodeFile
+      ? 'You are an expert code completion assistant. Complete the code naturally and concisely. Only return the completion, no explanations or markdown code blocks.'
+      : 'You are an expert writing assistant. Continue the text naturally and coherently. Only return the continuation, no explanations or formatting.';
+    
+    const userPrompt = isCodeFile
+      ? `Language: ${context.language}\nFile: ${context.filePath}\n\nCode before cursor:\n${context.prefixCode}\n\nCode after cursor:\n${context.suffixCode}\n\nComplete the code at the cursor position.`
+      : `File type: ${context.language}\nFile: ${context.filePath}\n\nText before cursor:\n${context.prefixCode}\n\nText after cursor:\n${context.suffixCode}\n\nContinue writing naturally from the cursor position.`;
 
-      const messages: OpenAIMessage[] = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ];
+    const messages: OpenAIMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
 
-      return await this.makeRequest(messages, config.contextMaxTokens);
-    } catch (error) {
-      this.logger.error('Code completion failed', error);
-      return '';
-    }
+    return await this.makeRequest(messages, config.contextMaxTokens);
   }
 
   public async rewriteDocument(context: EditContext): Promise<string> {
@@ -144,8 +145,11 @@ export class LLMClient {
         throw new Error('No completion choices returned');
       }
 
-      const completion = data.choices[0].message.content;
-      this.logger.debug('LLM response received', { length: completion.length });
+      const completion = this.extractCompletionText(data);
+      this.logger.debug('LLM response received', {
+        length: completion.length,
+        finishReason: data.choices[0]?.finish_reason ?? null
+      });
       
       return completion;
     } catch (error) {
@@ -157,5 +161,57 @@ export class LLMClient {
       
       throw error;
     }
+  }
+
+  private extractCompletionText(data: OpenAIResponse): string {
+    const choice = data.choices[0];
+
+    if (!choice) {
+      throw new Error('No completion choice available');
+    }
+
+    const messageContent = choice.message?.content;
+    if (typeof messageContent === 'string') {
+      return messageContent;
+    }
+
+    if (Array.isArray(messageContent)) {
+      const text = messageContent
+        .map(part => this.extractTextPart(part))
+        .filter((part): part is string => Boolean(part))
+        .join('');
+
+      if (text) {
+        return text;
+      }
+    }
+
+    if (typeof choice.text === 'string') {
+      return choice.text;
+    }
+
+    const refusal = choice.message?.refusal;
+    if (refusal) {
+      throw new Error(`Model refused completion: ${refusal}`);
+    }
+
+    if (choice.message?.tool_calls && choice.message.tool_calls.length > 0) {
+      throw new Error('Model returned tool calls instead of plain completion text');
+    }
+
+    const finishReason = choice.finish_reason ?? 'unknown';
+    throw new Error(`Completion response did not contain text content (finish_reason=${finishReason})`);
+  }
+
+  private extractTextPart(part: { type?: string; text?: string } | null | undefined): string | null {
+    if (!part || typeof part.text !== 'string') {
+      return null;
+    }
+
+    if (!part.type || part.type === 'text' || part.type === 'output_text') {
+      return part.text;
+    }
+
+    return null;
   }
 }

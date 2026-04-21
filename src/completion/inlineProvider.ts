@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { LLMClient } from '../api/llmClient';
-import { ContextCollector } from './contextCollector';
+import { ContextCollector, CodeContext } from './contextCollector';
 import { Logger } from '../utils/logger';
 import { SettingsManager } from '../config/settings';
 
@@ -12,6 +12,7 @@ export class InlineCompletionProvider implements vscode.InlineCompletionItemProv
   private currentRequest: Promise<string> | null = null;
   private lastRequestTime = 0;
   private lastErrorTime = 0;
+  private codeContext: CodeContext | null = null;
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -181,19 +182,20 @@ export class InlineCompletionProvider implements vscode.InlineCompletionItemProv
     position: vscode.Position
   ): Promise<string> {
     this.logger.info('📦 Collecting context...');
-    const context = await this.contextCollector.collectContext(document, position);
+    const codeContext = await this.contextCollector.collectContext(document, position);
+    this.codeContext = codeContext;
     
     this.logger.info('📤 Sending to LLM', {
-      language: context.language,
-      prefixLength: context.prefixCode.length,
-      suffixLength: context.suffixCode.length
+      language: codeContext.language,
+      prefixLength: codeContext.prefixCode.length,
+      suffixLength: codeContext.suffixCode.length
     });
     
     const completion = await this.llmClient.completeCode({
-      language: context.language,
-      filePath: context.filePath,
-      prefixCode: context.prefixCode,
-      suffixCode: context.suffixCode
+      language: codeContext.language,
+      filePath: codeContext.filePath,
+      prefixCode: codeContext.prefixCode,
+      suffixCode: codeContext.suffixCode
     });
 
     return completion;
@@ -227,6 +229,12 @@ export class InlineCompletionProvider implements vscode.InlineCompletionItemProv
     const currentLine = document.lineAt(position.line);
     if (completion.startsWith(currentLine.text)) {
       completion = completion.substring(currentLine.text.length)
+    }
+    
+    var prefixCode = this.codeContext?.prefixCode
+    if (prefixCode === undefined) prefixCode = ''
+    if (completion.startsWith(prefixCode)) {
+      completion = completion.substring(prefixCode.length)
     }
 
     return completion;
